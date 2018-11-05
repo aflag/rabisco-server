@@ -13,13 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	formatter := &logrus.TextFormatter{
-		FullTimestamp: true,
-	}
-	logrus.SetFormatter(formatter)
-}
-
 func main() {
 	// clear command line (someone very naughty is adding all these extra
 	// test.* flags)

@@ -32,7 +32,7 @@ func loggerMiddleware(next http.Handler) http.Handler {
 		logger.WithFields(logrus.Fields{
 			"method": r.Method,
 			"path":   r.URL.Path,
-			"host":   r.Host,
+			"ip":     r.Header.Get("X-Forwarded-For"),
 		}).Info("Request begins")
 		ctx := context.WithValue(r.Context(), loggerKey{}, logger)
 		next.ServeHTTP(w, r.WithContext(ctx))
