@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/aflag/rabisco-server/rabisco"
@@ -19,10 +21,20 @@ func init() {
 }
 
 func main() {
+	// clear command line (someone very naughty is adding all these extra
+	// test.* flags)
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	mongoURL := flag.String("mongo-url", "mongodb://127.0.0.1:27017", "mongo server url")
+	allowOrigin := flag.String("allow-origin", "http://localhost:8000", "allow connections from this origin")
+	bindAddr := flag.String("bind-to", "localhost:8000", "bind to this ip and port")
+
+	flag.Parse()
+
 	backend, err := rabisco.NewBackend(
 		context.Background(),
 		logrus.New(),
-		"mongodb://127.0.0.1:27017",
+		*mongoURL,
 	)
 	if err != nil {
 		logrus.Fatal(err.Error())
@@ -44,7 +56,7 @@ func main() {
 	r.Use(loggerMiddleware)
 	// CORS is a bit funny, it doesn't work with r.Use.
 	cors := handlers.CORS(
-		handlers.AllowedOrigins([]string{"http://90.194.89.3:8080"}),
+		handlers.AllowedOrigins([]string{*allowOrigin}),
 		handlers.AllowedHeaders([]string{"Accept", "Accept-Language", "Content-Language", "Origin", "content-type"}),
 		handlers.ExposedHeaders([]string{"Location", "Set-Cookie"}),
 		handlers.AllowCredentials(),
@@ -52,7 +64,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler:      cors(r),
-		Addr:         "0.0.0.0:8000",
+		Addr:         *bindAddr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
